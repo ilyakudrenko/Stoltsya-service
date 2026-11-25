@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ilyakudrenko.github.io/Stoltsya-service/sitemap.xml

@@ -85,6 +85,31 @@ if (hero && heroImage) {
   }
 }
 
+// Native navigation owns history. Only the matching photo joins the existing gate.
+function nameProductPhoto(event, otherUrl) {
+  if (!event.viewTransition) return;
+  // The browser can cancel an outgoing snapshot if the destination opts out.
+  event.viewTransition.ready.catch(() => {});
+  if (!otherUrl || !motionEnabled()) return;
+  const otherPath = new URL(otherUrl).pathname;
+  const detail = document.querySelector('[data-product-detail]');
+  const media = detail
+    ? (otherPath === new URL(document.baseURI).pathname || otherPath === new URL('materials/', document.baseURI).pathname ? detail : null)
+    : [...document.querySelectorAll('[data-product-media]')].find((item) =>
+        item.closest('.material-card').querySelector('a').pathname === otherPath);
+  const image = media?.querySelector('img');
+  if (!image?.complete || !image.naturalWidth) return;
+  const bounds = image.getBoundingClientRect();
+  if (bounds.width === 0 || bounds.bottom <= 0 || bounds.top >= innerHeight) return;
+  image.style.viewTransitionName = 'product-photo';
+  const clear = () => { image.style.viewTransitionName = ''; };
+  event.viewTransition.finished.then(clear, clear);
+}
+
+window.addEventListener('pageswap', (event) => {
+  nameProductPhoto(event, event.activation?.entry.url);
+});
+
 for (const catalog of document.querySelectorAll('[data-catalog]')) {
   const search = catalog.querySelector('input');
   const entries = [...catalog.querySelectorAll('[data-group]')].filter((entry) => entry instanceof HTMLElement);
@@ -105,6 +130,38 @@ for (const catalog of document.querySelectorAll('[data-catalog]')) {
     result.classList.toggle('catalog-count', count > 0);
   }
 
+  function saveCatalog() {
+    const category = buttons.find((button) => button.getAttribute('aria-pressed') === 'true')?.dataset.filter;
+    history.replaceState({...history.state, catalog: {...history.state?.catalog, category, query: search?.value || ''}}, '');
+  }
+
+  function restoreCatalog() {
+    const saved = history.state?.catalog;
+    if (!saved) return;
+    buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.filter === saved.category)));
+    if (search) search.value = saved.query;
+    filterMaterials();
+  }
+
+  // Apply before paint and before a reverse view transition takes its snapshot.
+  restoreCatalog();
+  catalog.addEventListener('click', (event) => {
+    if (!(event instanceof MouseEvent)) return;
+    const link = event.target instanceof Element && event.target.closest('a.surface-link');
+    if (!(link instanceof HTMLAnchorElement) || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    saveCatalog();
+    history.replaceState({...history.state, catalog: {...history.state.catalog, focus: event.detail === 0 ? link.pathname : null}}, '');
+  });
+  function restoreOriginFocus() {
+    const path = history.state?.catalog?.focus;
+    const link = [...catalog.querySelectorAll('a')].find((item) => item.matches('.surface-link') && item.pathname === path);
+    link?.focus({preventScroll: true});
+  }
+  window.addEventListener('pageshow', (event) => {
+    const visit = performance.getEntriesByType('navigation')[0];
+    if (event.persisted || (visit instanceof PerformanceNavigationTiming && visit.type === 'back_forward')) restoreOriginFocus();
+  });
+
   const cards = [...catalog.querySelectorAll('.material-card')].filter((card) => card instanceof HTMLElement);
   let cardMotion = [];
   function stopCardMotion() {
@@ -121,6 +178,7 @@ for (const catalog of document.querySelectorAll('[data-catalog]')) {
         .map((card) => [card, card.getBoundingClientRect()])) : new Map();
       buttons.forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
       filterMaterials();
+      saveCatalog();
       if (!animate) return;
 
       cards.filter((card) => !card.hidden).forEach((card, index) => {
@@ -146,10 +204,15 @@ for (const catalog of document.querySelectorAll('[data-catalog]')) {
   search?.addEventListener('input', () => {
     stopCardMotion();
     filterMaterials();
+    saveCatalog();
   });
   const controls = catalog.querySelector('.catalog-controls');
   if (controls instanceof HTMLElement) controls.hidden = false;
 }
+
+window.addEventListener('pagereveal', (event) => {
+  nameProductPhoto(event, window.navigation?.activation?.from?.url);
+});
 
 if ('IntersectionObserver' in window && !motionPreference.matches) {
   const observer = new IntersectionObserver((entries) => {

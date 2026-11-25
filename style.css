@@ -338,7 +338,7 @@ form>.button{justify-self:start}
     :is(.material-image-cover,.directions a,.entry-image,.editorial figure,.detail-layout figure,.gallery a)>img {
       transition: transform 340ms var(--motion-ease);
     }
-    :is(.material-card:hover .material-image-cover,.directions a:hover,.entry-image:hover,.editorial figure:hover,.detail-layout figure:hover,.gallery a:hover)>img {
+    :is(.material-card:hover .material-image-cover,.directions a:hover,.entry:hover .entry-image,.gallery a:hover)>img {
       transform: scale(1.025);
     }
   }
@@ -518,4 +518,47 @@ form>.button{justify-self:start}
 @keyframes shutter-plate {
   from { transform: translateX(calc(var(--travel) + var(--start))); }
   to { transform: translateX(var(--travel)); }
+}
+
+/* Stretch the primary link without adding a second focus stop. */
+.material-card,
+.entry {
+  position: relative;
+}
+.surface-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+.surface-link:focus-visible::after {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.material-card .material-quote {
+  position: relative;
+  z-index: 3;
+  display: inline-block;
+  padding-block: 4px;
+  margin-block: -4px;
+}
+.entry:hover .text-link,
+.entry:focus-within .text-link {
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(product-photo) {
+    animation-duration: var(--gate-time);
+    animation-timing-function: var(--motion-ease);
+    z-index: 1;
+  }
+  ::view-transition-old(product-photo),
+  ::view-transition-new(product-photo) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: normal;
+  }
 }

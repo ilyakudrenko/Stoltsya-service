@@ -59,8 +59,8 @@ ${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" hr
 
 function list(key, items = catalogs[key], level = 3) {
   return `<div class="entry-list" ${key === 'materials' ? 'id="material-list"' : ''}>${items.map((item) => `<article class="entry" data-group="${item.group || ''}">
-${item.image ? `<a class="entry-image ${['sand','asphalt','screenings'].includes(item.image) ? 'packaging' : ''}" href="${key}/${item.slug}/" tabindex="-1" aria-hidden="true">${imageFor(item,false,true)}</a>` : ''}
-<div class="entry-text"><h${level}><a href="${key}/${item.slug}/">${item.title}</a></h${level}><p>${item.short}</p></div><a class="text-link" href="${key}/${item.slug}/" aria-label="${e('Детальніше: '+item.title)}">Детальніше</a>
+${item.image ? `<div class="entry-image ${['sand','asphalt','screenings'].includes(item.image) ? 'packaging' : ''}">${imageFor(item,false,true)}</div>` : ''}
+<div class="entry-text"><h${level}><a class="surface-link" href="${key}/${item.slug}/">${item.title}</a></h${level}><p>${item.short}</p></div><span class="text-link" aria-hidden="true">Детальніше</span>
 </article>`).join('')}</div>`;
 }
 
@@ -79,9 +79,9 @@ ${withSearch ? '    <label class="catalog-search">Пошук матеріалі�
   </div>
   <div class="material-grid">${items.filter((item) => item !== clay).map((item) => `
     <article class="material-card" data-group="${item.group}">
-      <div class="material-image ${item.slug === 'crushed-stone' ? 'material-image-cover' : ''}">${imageFor(item,false,true)}</div>
+      <div data-product-media="${item.slug}" class="material-image ${item.slug === 'crushed-stone' ? 'material-image-cover' : ''}">${imageFor(item,false,true)}</div>
       <div class="material-body">
-        <h${heading}><a href="materials/${item.slug}/">${item.title}</a></h${heading}>
+        <h${heading}><a class="surface-link" href="materials/${item.slug}/">${item.title}</a></h${heading}>
         <p>${item.short}</p>
         <a class="material-quote" href="${e(contact('quote',item.title))}" aria-label="${e('Уточнити ціну: '+item.title)}">Уточнити ціну</a>
       </div>
@@ -119,7 +119,7 @@ const processOverview = `<section class="overview"><div class="wrap editorial pr
 const home = hero + directions + processOverview + `
 <section class="wrap block material-section"><div class="section-heading"><h2>Каталог матеріалів</h2><p>Оберіть матеріал і зателефонуйте, щоб уточнити ціну та наявність.</p></div>${materialCatalog()}${button('materials/','Увесь каталог','line')}</section>
 <section class="fleet"><div class="wrap editorial"><div><h2>Техніка для матеріалів</h2><p>Вантажівка з маніпулятором, самоскид і фронтальний навантажувач. Обговоріть задачу й уточніть можливість залучення техніки.</p>${button('equipment/','Переглянути техніку','outline')}</div><figure data-reveal="photo">${photo('delivery','Вантажівка з маніпулятором, вигляд збоку')}</figure></div></section>
-<section class="wrap block"><div class="section-heading"><h2>Доставка та самовивіз</h2><p>Заздалегідь погодьте обсяг і спосіб отримання.</p></div>${list('services')}</section>
+<section class="wrap block"><div class="section-heading"><h2>Фасування та доставка</h2><p>Заздалегідь погодьте обсяг і спосіб отримання.</p></div>${list('services')}</section>
 <section class="overview"><div class="wrap editorial"><figure data-reveal="photo">${photo('loader','Ківш навантажувача над бункером')}</figure><div><h2>На майданчику</h2><p>Фото завантаження матеріалів і підготовки фасованого щебеню до відвантаження.</p>${navLink('projects/','Фото та портфоліо')}</div></div></section>
 ${band('Уточніть ціну та умови постачання','Вкажіть матеріал, потрібний обсяг і населений пункт.','quote')}`;
 
@@ -130,8 +130,8 @@ function detail(key,item) {
   const gallery = item.gallery ? `<section class="wrap block gallery-section"><h2>Фотографії</h2><div class="gallery">${item.gallery.map(([file,alt])=>`<a href="assets/${file}.webp" data-reveal="photo" aria-label="${e('Відкрити фото: '+alt)}">${photo(file,alt)}</a>`).join('')}</div></section>` : '';
   const notice = {materials:'Ціну, наявність і спосіб отримання уточнюйте перед замовленням.',equipment:'Умови залучення техніки узгоджуються окремо.',projects:'Фоторепортаж з майданчика.'}[key];
   const related = catalogs[key].filter((other)=>other.slug !== item.slug).slice(0,2);
-  return pageTitle(item.title,item.short,key) + `<section class="wrap block detail-layout ${!item.image ? 'text-only' : ''}">${item.image ? `<figure class="${['sand','asphalt','screenings'].includes(item.image) ? 'packaging' : ''}">${imageFor(item,true)}</figure>` : ''}
-<div><h2>${key === 'materials' ? 'Характеристики' : 'Опис'}</h2><p>${item.text}</p>${specs}${notice ? `<p class="notice">${notice}</p>` : ''}${button(contact(topicBySection[key],item.title),'Підготувати запит','accent')}</div></section>` + gallery + (related.length ? `<section class="wrap block"><h2>Також у розділі</h2>${list(key,related)}</section>` : '');
+  return pageTitle(item.title,item.short,key) + `<section class="wrap block detail-layout ${!item.image ? 'text-only' : ''}">${item.image ? `<figure ${key === 'materials' ? `data-product-detail="${item.slug}"` : ''} class="${['sand','asphalt','screenings'].includes(item.image) ? 'packaging' : ''}">${imageFor(item,true)}</figure>` : ''}
+<div><h2>${key === 'materials' ? 'Характеристики' : 'Опис'}</h2><p>${item.text}</p>${specs}${notice ? `<p class="notice">${notice}</p>` : ''}${button(contact(item.topic || topicBySection[key],item.title),'Підготувати запит','accent')}</div></section>` + gallery + (related.length ? `<section class="wrap block"><h2>Також у розділі</h2>${list(key,related)}</section>` : '');
 }
 
 const contacts = pageTitle('Контакти','Зателефонуйте щодо матеріалів, доставки й самовивозу або підготуйте текст запиту.') + `<section class="wrap block contact-grid" id="inquiry">

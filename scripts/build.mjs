@@ -96,7 +96,8 @@ const hero = `<section class="hero"><div class="wrap hero-layout">
 <h1>Будівельні матеріали з доставкою<span>.</span></h1>
 <p>Пісок, щебінь, відсів, керамзит і холодний асфальт. У мішках і навалом, з доставкою або самовивозом.</p>
 <div class="actions">${button('materials/','Переглянути матеріали','accent')}${button('services/delivery/','Умови доставки','outline')}</div></div>
-<figure>${photo('truck','Вантажівка з краном-маніпулятором на майданчику',true)}</figure>
+<figure class="hero-shutter">${photo('truck','Вантажівка з краном-маніпулятором на майданчику',true)}
+<div class="hero-shutter-plates" aria-hidden="true"><span></span><span></span><span></span></div></figure>
 </div></section>`;
 
 const directions = `<section class="wrap block"><div class="section-heading"><h2>Напрями роботи</h2><p>Матеріали, постачання та техніка для вашого об’єкта.</p></div>
@@ -108,8 +109,8 @@ const processPhotos = [
   ['delivery','Відвантаження','Вантажівка з гідравлічним маніпулятором'],
 ];
 const processOverview = `<section class="overview"><div class="wrap editorial process" data-process>
-  <figure data-reveal="photo">${processPhotos.map(([file,label,alt],index) =>
-    `<div class="process-frame" id="process-photo-${file}"${index ? ' hidden' : ''}>${photo(file,alt)}<span class="process-caption">${label}</span></div>`).join('')}</figure>
+  <figure class="process-view" data-reveal="photo">${processPhotos.map(([file,label,alt],index) =>
+    `<div class="process-frame" id="process-photo-${file}"${index ? ' hidden' : ''}>${photo(file,alt)}<span class="process-caption">${label}</span></div>`).join('')}<div class="process-meter" aria-hidden="true"><i></i><i></i><i></i></div></figure>
   <div><h2>Від фасування до відвантаження</h2><p>«Столиця &amp; Сервіс» продає будівельні матеріали у мішках і навалом. Можна замовити доставку або забрати погоджений обсяг самостійно.</p>
   <ol class="process-stages" aria-label="Етапи роботи з матеріалами">${processPhotos.map(([file,label]) =>
     `<li><a href="assets/${file}.webp" data-stage="process-photo-${file}">${label}</a></li>`).join('')}</ol>

@@ -54,6 +54,15 @@ required('.skip', HTMLAnchorElement).addEventListener('click', (event) => {
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 const canAnimate = typeof Element.prototype.animate === 'function';
 const actuator = 'cubic-bezier(.22,.72,.24,1)';
+const motionEnabled = () => canAnimate && !motionPreference.matches;
+
+const hero = document.querySelector('.hero-shutter');
+const heroImage = hero?.querySelector('img');
+heroImage?.decode?.().then(() => {
+  const internalArrival = document.referrer.startsWith(new URL(document.baseURI).href);
+  if (!motionEnabled() || internalArrival || scrollY > 24 || hero.getBoundingClientRect().bottom <= 0) return;
+  hero.classList.add('shutter-ready');
+}, () => {});
 
 for (const catalog of document.querySelectorAll('[data-catalog]')) {
   const search = catalog.querySelector('input');
@@ -75,23 +84,48 @@ for (const catalog of document.querySelectorAll('[data-catalog]')) {
     result.classList.toggle('catalog-count', count > 0);
   }
 
+  const cards = [...catalog.querySelectorAll('.material-card')].filter((card) => card instanceof HTMLElement);
+  let cardMotion = [];
+  function stopCardMotion() {
+    cardMotion.forEach((animation) => animation.cancel());
+    cardMotion = [];
+  }
+
   for (const button of buttons) {
     button.addEventListener('click', () => {
       if (button.getAttribute('aria-pressed') === 'true') return;
+      stopCardMotion();
+      const animate = motionEnabled();
+      const before = animate ? new Map(cards.filter((card) => !card.hidden)
+        .map((card) => [card, card.getBoundingClientRect()])) : new Map();
       buttons.forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
       filterMaterials();
-      if (!canAnimate || motionPreference.matches) return;
-      const images = [...catalog.querySelectorAll('.material-card:not([hidden]) .material-image')];
-      images.forEach((image, index) => {
-        image.getAnimations?.().forEach((animation) => animation.cancel());
-        image.animate(
-          [{clipPath: 'inset(0 11% 0 0)'}, {clipPath: 'inset(0)'}],
-          {duration: 230, delay: index * 24, easing: actuator, fill: 'backwards'},
-        );
+      if (!animate) return;
+
+      cards.filter((card) => !card.hidden).forEach((card, index) => {
+        const previous = before.get(card);
+        if (previous) {
+          const current = card.getBoundingClientRect();
+          const x = previous.left - current.left;
+          const y = previous.top - current.top;
+          if (x || y) cardMotion.push(card.animate(
+            [{translate: `${x}px ${y}px`}, {translate: '0 0'}],
+            {duration: 320, easing: actuator},
+          ));
+        } else {
+          const image = card.querySelector('.material-image');
+          cardMotion.push(image.animate(
+            [{clipPath: 'inset(0 58% 0 0)'}, {clipPath: 'inset(0)'}],
+            {duration: 340, delay: index * 28, easing: actuator, fill: 'backwards'},
+          ));
+        }
       });
     });
   }
-  search?.addEventListener('input', filterMaterials);
+  search?.addEventListener('input', () => {
+    stopCardMotion();
+    filterMaterials();
+  });
   const controls = catalog.querySelector('.catalog-controls');
   if (controls instanceof HTMLElement) controls.hidden = false;
 }
@@ -117,6 +151,8 @@ if (process) {
   const stages = [...process.querySelectorAll('a[data-stage]')];
   const frames = [...process.querySelectorAll('.process-frame')].filter((frame) => frame instanceof HTMLElement);
   stages[0].setAttribute('aria-current', 'step');
+  let current = frames[0];
+  let handoff;
 
   process.addEventListener('click', (event) => {
     if (!(event instanceof MouseEvent) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -125,20 +161,34 @@ if (process) {
     const next = frames.find((frame) => frame.id === stage.dataset.stage);
     if (!next) return;
     event.preventDefault();
-    if (!next.hidden) return;
+    if (next === current) return;
 
+    handoff?.cancel();
+    const previous = current;
+    const forward = frames.indexOf(next) > frames.indexOf(previous);
+    current = next;
     for (const frame of frames) {
-      frame.getAnimations?.().forEach((animation) => animation.cancel());
       frame.hidden = frame !== next;
+      frame.classList.remove('process-outgoing');
+      frame.removeAttribute('aria-hidden');
     }
     stages.forEach((link) => link.removeAttribute('aria-current'));
     stage.setAttribute('aria-current', 'step');
-    if (canAnimate && !motionPreference.matches) {
-      next.animate(
-        [{clipPath: 'inset(0 0 34% 0)'}, {clipPath: 'inset(0)'}],
-        {duration: 340, easing: actuator},
-      );
-    }
+    process.setAttribute('data-active-stage', String(frames.indexOf(next)));
+    if (!motionEnabled()) return;
+
+    previous.hidden = false;
+    previous.classList.add('process-outgoing');
+    previous.setAttribute('aria-hidden', 'true');
+    handoff = next.animate(
+      [{clipPath: forward ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)'}, {clipPath: 'inset(0)'}],
+      {duration: 520, easing: actuator},
+    );
+    handoff.finished.then(() => {
+      previous.hidden = true;
+      previous.classList.remove('process-outgoing');
+      previous.removeAttribute('aria-hidden');
+    }, () => {});
   });
 }
 

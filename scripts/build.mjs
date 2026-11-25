@@ -1,10 +1,15 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { company, sections, catalogs, inquiryTopics } from '../src/content.mjs';
 
 const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const e = escape;
 const sitePath = new URL(company.url).pathname;
+const assetUrls = Object.fromEntries(await Promise.all(['style.css', 'catalog.js'].map(async (file) => {
+  const revision = createHash('sha256').update(await readFile(file)).digest('hex').slice(0, 12);
+  return [file, `${file}?v=${revision}`];
+})));
 const phone = () => `<a class="phone" href="${company.tel}">${company.phone}</a>`;
 const button = (url, label, type = '') => `<a class="button ${type}" href="${e(url)}">${e(label)}</a>`;
 const contact = (topic, item = '') => `contacts/?topic=${encodeURIComponent(topic)}${item ? '&item=' + encodeURIComponent(item) : ''}#inquiry`;
@@ -36,7 +41,7 @@ ${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" hr
 <meta property="og:type" content="website"><meta property="og:locale" content="uk_UA">
 <meta property="og:title" content="${e(title)}"><meta property="og:description" content="${e(description)}">
 <meta property="og:url" content="${canonical}"><meta property="og:image" content="${company.url}assets/${image}.webp">
-<link rel="icon" href="assets/favicon.png" type="image/png"><link rel="stylesheet" href="style.css"><script src="catalog.js" defer></script>${schema}
+<link rel="icon" href="assets/favicon.png" type="image/png"><link rel="stylesheet" href="${assetUrls['style.css']}"><script src="${assetUrls['catalog.js']}" defer></script>${schema}
 <noscript><style>@media(max-width:760px){#main-nav{display:grid}.menu-toggle{display:none}}</style></noscript></head><body>
 <a class="skip" href="${canonical}#main">До основного вмісту</a>
 <header class="site-header"><div class="wrap head-inner">${brand}

@@ -58,11 +58,32 @@ const motionEnabled = () => canAnimate && !motionPreference.matches;
 
 const hero = document.querySelector('.hero-shutter');
 const heroImage = hero?.querySelector('img');
-heroImage?.decode?.().then(() => {
-  const internalArrival = document.referrer.startsWith(new URL(document.baseURI).href);
-  if (!motionEnabled() || internalArrival || scrollY > 24 || hero.getBoundingClientRect().bottom <= 0) return;
-  hero.classList.add('shutter-ready');
-}, () => {});
+if (hero && heroImage) {
+  const imageReady = heroImage.decode?.().then(() => true, () => false) ?? Promise.resolve(true);
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(async ([entry]) => {
+      if (entry.intersectionRatio === 0) {
+        hero.classList.remove('shutter-ready');
+      } else if (entry.intersectionRatio >= 0.15 && await imageReady && motionEnabled()) {
+        const bounds = hero.getBoundingClientRect();
+        if (bounds.bottom > 0 && bounds.top < innerHeight) hero.classList.add('shutter-ready');
+      }
+    }, {threshold: [0, 0.15]});
+
+    observer.observe(hero);
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      hero.classList.remove('shutter-ready');
+      observer.unobserve(hero);
+      observer.observe(hero);
+    });
+  } else {
+    imageReady.then((ready) => {
+      if (ready && motionEnabled()) hero.classList.add('shutter-ready');
+    });
+  }
+}
 
 for (const catalog of document.querySelectorAll('[data-catalog]')) {
   const search = catalog.querySelector('input');

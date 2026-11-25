@@ -80,7 +80,7 @@ References consulted:
 
 ### Cinematic iteration
 
-Three mechanical actions guide the second iteration: steel plates retract across the first-arrival truck photograph, a diagonal aperture opens between documents, and one production photograph takes over the previous photograph along a directional cut. The catalog uses FLIP geometry for cards that remain visible and a short aperture for newly visible cards. Filtering changes state immediately. A real packing-stage indicator reflects the selected photograph.
+Three mechanical actions guide the second iteration: steel plates retract across the truck photograph whenever it comes back into view, a diagonal aperture opens between documents, and one production photograph takes over the previous photograph along a directional cut. The catalog uses FLIP geometry for cards that remain visible and a short aperture for newly visible cards. Filtering changes state immediately. A real packing-stage indicator reflects the selected photograph.
 
 The previous one-direction shutter was the baseline. A full-width sheet would hide the truck, so the entrance uses three alternating bands that leave part of the actual photograph visible from the first frame. The process viewer compares the former single-photo mask with a two-photo handoff. Retaining the previous photograph underneath keeps the section visually continuous. A granular Canvas fill was considered for the main impression, but it would put simulated material ahead of real machinery and add per-frame work. No new dependencies or media downloads were introduced.
 

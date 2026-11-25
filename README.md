@@ -58,3 +58,22 @@ Before adding direct submission or callback booking, confirm a destination inbox
 - Automated axe checks ran at 375 and 1440 px. The local homepage’s mobile Lighthouse run scored 97 performance, 100 accessibility, 100 best practices, and 100 SEO. These are lab measurements.
 - The SMS link and copy controls were exercised in Chromium. SMS sending depends on the visitor’s device and messaging app.
 - JavaScript syntax, JavaScript and CSS lint, TypeScript's JavaScript checker, and Git whitespace checks passed.
+
+## Motion direction
+
+The photographed hopper, bagged aggregate, and truck-mounted manipulator informed three directions:
+
+| Direction | Fit and trade-offs | Decision |
+| --- | --- | --- |
+| Hopper discharge gate | Downward travel connects the navigation to the packing process. A straight mask reads on narrow screens and costs one native snapshot pair. It requires little maintenance. | Signature page transition and photographic aperture. |
+| Conveyor handoff | A horizontal sequence fits sorting and logistics. Moving entire pages sideways competes with mobile history gestures and displaces the reader’s reference point. A short directional mask is easier to maintain. | Local mask for catalog category changes. |
+| Big Bag filling | Falling and settling material would make a distinctive literal simulation. A convincing particle fill requires additional rendering and tuning on phones, while a startup version implies progress the site does not track. | Keep the process visible through supplied photographs. |
+
+The homepage pairs an existing packing overview with three optional photo stages: hopper feed, bagging, and dispatch. Below-the-fold photo reveals play once. Core copy, imagery, and actions render immediately. The native page transition opens across the new snapshot in 330 ms on desktop or 210 ms on mobile while the departing page remains visible underneath. No custom router, dependency, preloader, animation loop, or scroll pinning is required. Reduced motion receives immediate state changes and standard navigation. Unsupported browsers retain ordinary links; with JavaScript off the photo-stage links open their images directly.
+
+References consulted:
+
+- [Chrome cross-document View Transitions](https://developer.chrome.com/docs/web-platform/view-transitions/cross-document) for native navigation and history behavior.
+- [Codrops Image Reveal Hover](https://github.com/codrops/ImageRevealHover/) for separating clipping from image movement. The demo host returned a challenge in Chromium, while the project and demo index were readable.
+- [Motion image reveal slider](https://motion.dev/examples/vue-image-reveal-slider) for a defined mask edge and keyboard-operable controls. The full interactive example requires Motion+.
+- [GSAP Showcase](https://gsap.com/showcase/) and [Hoverstat.es](https://www.hoverstat.es/) for timing and visual restraint. The GSAP showcase opened in Chromium; the text fetch was challenged. Land-book and several Codrops indexes denied the text fetch.

@@ -303,7 +303,7 @@ form>.button{justify-self:start}
 
 /* Motion is progressive enhancement; every element is visible by default. */
 @media (prefers-reduced-motion: no-preference) {
-  :root { --motion-ease: cubic-bezier(.2,.65,.3,1); }
+  :root { --motion-ease: cubic-bezier(.22,.72,.24,1); }
   :is(.button,.menu-toggle,.catalog-filters button) {
     transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
   }
@@ -317,14 +317,8 @@ form>.button{justify-self:start}
   #main-nav.open {
     animation: menu-in 190ms var(--motion-ease);
   }
-  .reveal-entered {
-    animation: section-in 490ms var(--motion-ease) both;
-  }
   .reveal-entered[data-reveal="photo"] {
     animation: photo-in 560ms var(--motion-ease) both;
-  }
-  .material-card.reveal-entered:nth-child(even) {
-    animation-delay: 45ms;
   }
   .reveal-entered:focus-within {
     animation: none;
@@ -334,18 +328,18 @@ form>.button{justify-self:start}
       transition: transform 290ms var(--motion-ease), border-color 290ms ease, box-shadow 290ms ease;
     }
     .material-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-2px);
       border-color: #aeb2a8;
       box-shadow: 0 5px 12px #20231f13;
     }
     :is(.material-image,.directions a,.entry-image,.editorial figure,.detail-layout figure,.gallery a) {
       overflow: hidden;
     }
-    :is(.material-image,.directions a,.entry-image,.editorial figure,.detail-layout figure,.gallery a)>img {
+    :is(.material-image-cover,.directions a,.entry-image,.editorial figure,.detail-layout figure,.gallery a)>img {
       transition: transform 340ms var(--motion-ease);
     }
-    :is(.material-card:hover .material-image,.directions a:hover,.entry-image:hover,.editorial figure:hover,.detail-layout figure:hover,.gallery a:hover)>img {
-      transform: scale(1.035);
+    :is(.material-card:hover .material-image-cover,.directions a:hover,.entry-image:hover,.editorial figure:hover,.detail-layout figure:hover,.gallery a:hover)>img {
+      transform: scale(1.025);
     }
   }
 }
@@ -353,11 +347,87 @@ form>.button{justify-self:start}
   from { opacity: .55; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes section-in {
-  from { opacity: .55; translate: 0 9px; }
-  to { opacity: 1; translate: 0 0; }
-}
 @keyframes photo-in {
-  from { opacity: .6; clip-path: inset(4% 0 0); }
-  to { opacity: 1; clip-path: inset(0); }
+  from { clip-path: inset(0 0 18% 0); }
+  to { clip-path: inset(0); }
+}
+
+/* The packing sequence uses the same fixed aperture for every photograph. */
+.process-frame {
+  position: relative;
+  height: 100%;
+}
+.process-caption {
+  position: absolute;
+  inset: auto auto 0 0;
+  padding: 7px 12px;
+  background: var(--dark);
+  color: var(--paper);
+  font-size: .875rem;
+}
+.process-stages {
+  display: grid;
+  padding: 0;
+  margin: 20px 0;
+  list-style-position: inside;
+  border-top: 1px solid var(--rule);
+}
+.process-stages li {
+  display: flex;
+  border-bottom: 1px solid var(--rule);
+}
+.process-stages a {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border-inline-start: 3px solid transparent;
+  text-decoration: none;
+}
+.process-stages a:hover {
+  background: var(--paper);
+}
+.process-stages a[aria-current="step"] {
+  border-inline-start-color: var(--accent);
+  background: var(--paper);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  /* The existing page stays visible under the opening gate. */
+  ::view-transition {
+    pointer-events: none;
+  }
+  ::view-transition-group(root) {
+    animation-duration: 330ms;
+  }
+  ::view-transition-image-pair(root) {
+    isolation: isolate;
+  }
+  ::view-transition-old(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-new(root) {
+    animation: hopper-gate 330ms var(--motion-ease) both;
+    mix-blend-mode: normal;
+  }
+  .process-stages a {
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  @media (max-width: 760px) {
+    ::view-transition-group(root),
+    ::view-transition-new(root) {
+      animation-duration: 210ms;
+    }
+  }
+}
+
+@keyframes hopper-gate {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0); }
 }

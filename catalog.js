@@ -51,6 +51,10 @@ required('.skip', HTMLAnchorElement).addEventListener('click', (event) => {
   content.scrollIntoView();
 });
 
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+const canAnimate = typeof Element.prototype.animate === 'function';
+const actuator = 'cubic-bezier(.22,.72,.24,1)';
+
 for (const catalog of document.querySelectorAll('[data-catalog]')) {
   const search = catalog.querySelector('input');
   const entries = [...catalog.querySelectorAll('[data-group]')].filter((entry) => entry instanceof HTMLElement);
@@ -73,8 +77,18 @@ for (const catalog of document.querySelectorAll('[data-catalog]')) {
 
   for (const button of buttons) {
     button.addEventListener('click', () => {
+      if (button.getAttribute('aria-pressed') === 'true') return;
       buttons.forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
       filterMaterials();
+      if (!canAnimate || motionPreference.matches) return;
+      const images = [...catalog.querySelectorAll('.material-card:not([hidden]) .material-image')];
+      images.forEach((image, index) => {
+        image.getAnimations?.().forEach((animation) => animation.cancel());
+        image.animate(
+          [{clipPath: 'inset(0 11% 0 0)'}, {clipPath: 'inset(0)'}],
+          {duration: 230, delay: index * 24, easing: actuator, fill: 'backwards'},
+        );
+      });
     });
   }
   search?.addEventListener('input', filterMaterials);
@@ -82,7 +96,7 @@ for (const catalog of document.querySelectorAll('[data-catalog]')) {
   if (controls instanceof HTMLElement) controls.hidden = false;
 }
 
-if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+if ('IntersectionObserver' in window && !motionPreference.matches) {
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
@@ -96,6 +110,36 @@ if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: re
     // The first screen and all content without JavaScript render immediately.
     if (element.getBoundingClientRect().top >= innerHeight) observer.observe(element);
   }
+}
+
+const process = document.querySelector('[data-process]');
+if (process) {
+  const stages = [...process.querySelectorAll('a[data-stage]')];
+  const frames = [...process.querySelectorAll('.process-frame')].filter((frame) => frame instanceof HTMLElement);
+  stages[0].setAttribute('aria-current', 'step');
+
+  process.addEventListener('click', (event) => {
+    if (!(event instanceof MouseEvent) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const stage = event.target instanceof Element && event.target.closest('a[data-stage]');
+    if (!(stage instanceof HTMLAnchorElement)) return;
+    const next = frames.find((frame) => frame.id === stage.dataset.stage);
+    if (!next) return;
+    event.preventDefault();
+    if (!next.hidden) return;
+
+    for (const frame of frames) {
+      frame.getAnimations?.().forEach((animation) => animation.cancel());
+      frame.hidden = frame !== next;
+    }
+    stages.forEach((link) => link.removeAttribute('aria-current'));
+    stage.setAttribute('aria-current', 'step');
+    if (canAnimate && !motionPreference.matches) {
+      next.animate(
+        [{clipPath: 'inset(0 0 34% 0)'}, {clipPath: 'inset(0)'}],
+        {duration: 340, easing: actuator},
+      );
+    }
+  });
 }
 
 const form = document.querySelector('#inquiry-form');

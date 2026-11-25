@@ -53,10 +53,37 @@ ${noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" hr
 }
 
 function list(key, items = catalogs[key], level = 3) {
-  return `<div class="entry-list" ${key === 'materials' ? 'id="material-list"' : ''}>${items.map((item) => `<article class="entry" data-group="${item.group || ''}">
+  return `<div class="entry-list" ${key === 'materials' ? 'id="material-list"' : ''}>${items.map((item) => `<article class="entry" ${['services','equipment','projects'].includes(key) ? 'data-reveal' : ''} data-group="${item.group || ''}">
 ${item.image ? `<a class="entry-image ${['sand','asphalt','screenings'].includes(item.image) ? 'packaging' : ''}" href="${key}/${item.slug}/" tabindex="-1" aria-hidden="true">${imageFor(item,false,true)}</a>` : ''}
 <div class="entry-text"><h${level}><a href="${key}/${item.slug}/">${item.title}</a></h${level}><p>${item.short}</p></div><a class="text-link" href="${key}/${item.slug}/" aria-label="${e('Детальніше: '+item.title)}">Детальніше</a>
 </article>`).join('')}</div>`;
+}
+
+function materialCatalog(withSearch = false) {
+  const items = catalogs.materials;
+  const clay = items.find((item) => item.slug === 'expanded-clay');
+  const heading = withSearch ? 2 : 3;
+  return `<div class="material-catalog" data-catalog>
+  <div class="catalog-controls" hidden>
+    <div class="catalog-filters" role="group" aria-label="Категорії матеріалів">
+      <button type="button" data-filter="" aria-pressed="true">Всі матеріали</button>
+      <button type="button" data-filter="bulk" aria-pressed="false">Сипучі матеріали</button>
+      <button type="button" data-filter="road" aria-pressed="false">Дорожні матеріали</button>
+    </div>
+${withSearch ? '    <label class="catalog-search">Пошук матеріалів<input type="search" placeholder="Наприклад, щебінь"></label>' : ''}
+  </div>
+  <div class="material-grid">${items.filter((item) => item !== clay).map((item) => `
+    <article class="material-card" data-group="${item.group}" data-reveal>
+      <div class="material-image ${item.slug === 'crushed-stone' ? 'material-image-cover' : ''}">${imageFor(item,false,true)}</div>
+      <div class="material-body">
+        <h${heading}><a href="materials/${item.slug}/">${item.title}</a></h${heading}>
+        <p>${item.short}</p>
+        <a class="material-quote" href="${e(contact('quote',item.title))}" aria-label="${e('Уточнити ціну: '+item.title)}">Уточнити ціну</a>
+      </div>
+    </article>`).join('')}</div>
+  ${clay ? `<p class="catalog-note" data-group="${clay.group}"><a href="materials/${clay.slug}/">${clay.title}</a> також в асортименті. <a class="material-quote" href="${e(contact('quote',clay.title))}">Уточнити фасування</a></p>` : ''}
+  <p class="catalog-status" role="status"></p>
+</div>`;
 }
 
 const hero = `<section class="hero"><div class="wrap hero-layout">
@@ -67,22 +94,21 @@ const hero = `<section class="hero"><div class="wrap hero-layout">
 <figure>${photo('truck','Вантажівка з краном-маніпулятором на майданчику',true)}</figure>
 </div></section>`;
 
-const directions = `<section class="wrap block"><div class="section-heading"><h2>Напрями роботи</h2><p>Матеріали, постачання та техніка для вашого об’єкта.</p></div>
+const directions = `<section class="wrap block"><div class="section-heading" data-reveal><h2>Напрями роботи</h2><p>Матеріали, постачання та техніка для вашого об’єкта.</p></div>
 <div class="directions">${['materials','services','equipment'].map((key,index)=>`<a href="${key}/">${imageFor(sections[key])}<div><h3>${['Будівельні матеріали','Послуги','Спецтехніка'][index]}</h3><p>${['Сипучі матеріали та холодний асфальт','Доставка на об’єкт і самовивіз','Техніка для перевезення та завантаження'][index]}</p></div></a>`).join('')}</div></section>`;
 
-const home = hero + directions + `<section class="overview"><div class="wrap editorial"><figure>${photo('yard','Навантажувач біля лінії фасування')}</figure><div><h2>Від фасування до відвантаження</h2><p>«Столиця &amp; Сервіс» продає будівельні матеріали у мішках і навалом. Можна замовити доставку або забрати погоджений обсяг самостійно.</p>${navLink('about/','Про компанію')}</div></div></section>
-<section class="wrap block"><div class="section-heading"><h2>Каталог матеріалів</h2>${button('materials/','Увесь каталог','line')}</div>${list('materials')}</section>
-<section class="fleet"><div class="wrap editorial"><div><h2>Техніка для матеріалів</h2><p>Вантажівка з маніпулятором, самоскид і фронтальний навантажувач. Обговоріть задачу й уточніть можливість залучення техніки.</p>${button('equipment/','Переглянути техніку','outline')}</div><figure>${photo('delivery','Вантажівка з маніпулятором, вигляд збоку')}</figure></div></section>
-<section class="wrap block"><div class="section-heading"><h2>Доставка та самовивіз</h2><p>Заздалегідь погодьте обсяг і спосіб отримання.</p></div>${list('services')}</section>
-<section class="overview"><div class="wrap editorial"><figure>${photo('loader','Ківш навантажувача над бункером')}</figure><div><h2>На майданчику</h2><p>Фото завантаження матеріалів і підготовки фасованого щебеню до відвантаження.</p>${navLink('projects/','Фото та портфоліо')}</div></div></section>
+const home = hero + directions + `<section class="overview"><div class="wrap editorial"><figure data-reveal="photo">${photo('yard','Навантажувач біля лінії фасування')}</figure><div><h2>Від фасування до відвантаження</h2><p>«Столиця &amp; Сервіс» продає будівельні матеріали у мішках і навалом. Можна замовити доставку або забрати погоджений обсяг самостійно.</p>${navLink('about/','Про компанію')}</div></div></section>
+<section class="wrap block material-section"><div class="section-heading" data-reveal><h2>Каталог матеріалів</h2><p>Оберіть матеріал і зателефонуйте, щоб уточнити ціну та наявність.</p></div>${materialCatalog()}${button('materials/','Увесь каталог','line')}</section>
+<section class="fleet"><div class="wrap editorial"><div><h2>Техніка для матеріалів</h2><p>Вантажівка з маніпулятором, самоскид і фронтальний навантажувач. Обговоріть задачу й уточніть можливість залучення техніки.</p>${button('equipment/','Переглянути техніку','outline')}</div><figure data-reveal="photo">${photo('delivery','Вантажівка з маніпулятором, вигляд збоку')}</figure></div></section>
+<section class="wrap block"><div class="section-heading" data-reveal><h2>Доставка та самовивіз</h2><p>Заздалегідь погодьте обсяг і спосіб отримання.</p></div>${list('services')}</section>
+<section class="overview"><div class="wrap editorial"><figure data-reveal="photo">${photo('loader','Ківш навантажувача над бункером')}</figure><div><h2>На майданчику</h2><p>Фото завантаження матеріалів і підготовки фасованого щебеню до відвантаження.</p>${navLink('projects/','Фото та портфоліо')}</div></div></section>
 ${band('Уточніть ціну та умови постачання','Вкажіть матеріал, потрібний обсяг і населений пункт.','quote')}`;
 
-const controls = `<div class="controls" hidden><label for="search">Пошук матеріалів<input type="search" id="search" placeholder="Наприклад, щебінь" aria-controls="material-list"></label><label for="group">Категорія<select id="group" aria-controls="material-list"><option value="">Усі матеріали</option><option value="bulk">Сипучі матеріали</option><option value="road">Дорожні матеріали</option></select></label><p id="results" role="status"></p></div>`;
 const topicBySection = {materials:'quote',services:'delivery',equipment:'equipment',projects:'construction'};
 
 function detail(key,item) {
   const specs = item.specs ? `<dl class="specs">${item.specs.map(([name,value])=>`<div><dt>${name}</dt><dd>${value}</dd></div>`).join('')}</dl>` : '';
-  const gallery = item.gallery ? `<section class="wrap block gallery-section"><h2>Фотографії</h2><div class="gallery">${item.gallery.map(([file,alt])=>`<a href="assets/${file}.webp" aria-label="${e('Відкрити фото: '+alt)}">${photo(file,alt)}</a>`).join('')}</div></section>` : '';
+  const gallery = item.gallery ? `<section class="wrap block gallery-section"><h2>Фотографії</h2><div class="gallery">${item.gallery.map(([file,alt])=>`<a href="assets/${file}.webp" data-reveal="photo" aria-label="${e('Відкрити фото: '+alt)}">${photo(file,alt)}</a>`).join('')}</div></section>` : '';
   const notice = {materials:'Ціну, наявність і спосіб отримання уточнюйте перед замовленням.',equipment:'Умови залучення техніки узгоджуються окремо.',projects:'Фоторепортаж з майданчика.'}[key];
   const related = catalogs[key].filter((other)=>other.slug !== item.slug).slice(0,2);
   return pageTitle(item.title,item.short,key) + `<section class="wrap block detail-layout ${!item.image ? 'text-only' : ''}">${item.image ? `<figure class="${['sand','asphalt','screenings'].includes(item.image) ? 'packaging' : ''}">${imageFor(item,true)}</figure>` : ''}
@@ -96,7 +122,7 @@ const contacts = pageTitle('Контакти','Зателефонуйте щод
 <form id="inquiry-form" hidden>
 <label for="topic">Тема<select id="topic" name="topic">${Object.entries(inquiryTopics).map(([key,value])=>`<option value="${key}">${value}</option>`).join('')}</select></label>
 <div class="form-row"><label for="name">Ім’я<input id="name" name="name" required maxlength="80" autocomplete="name"></label>
-<label for="phone">Ваш телефон<input id="phone" name="phone" type="tel" required maxlength="24" autocomplete="tel" inputmode="tel" aria-describedby="phone-help"><span class="field-help" id="phone-help">Наприклад, +380 50 123 45 67</span></label></div>
+<label for="phone">Ваш телефон<input id="phone" name="phone" type="tel" required maxlength="24" autocomplete="tel" inputmode="tel" placeholder="Наприклад, +380 50 123 45 67"></label></div>
 <label for="message">Деталі запиту<textarea id="message" name="message" rows="4" maxlength="500"></textarea></label>
 <button class="button accent" type="submit">Підготувати текст</button>
 <p id="form-status" role="status"></p>
@@ -106,7 +132,7 @@ const contacts = pageTitle('Контакти','Зателефонуйте щод
 const pages = [
   {route:'',title:'Будівельні матеріали з доставкою',description:'Річковий пісок, щебінь, відсів, керамзит і холодний асфальт. Доставка та самовивіз.',body:home},
   ...Object.entries(sections).flatMap(([key,section])=>[
-    {route:key+'/',title:section.title,description:section.intro,image:section.image,body:pageTitle(section.title,section.intro)+`<section class="wrap block">${key === 'materials' ? controls : ''}${list(key,catalogs[key],2)}</section>`+band('Обговорімо ваш запит','Підготуйте деталі або зателефонуйте, щоб уточнити умови.',topicBySection[key])},
+    {route:key+'/',title:section.title,description:section.intro,image:section.image,body:pageTitle(section.title,section.intro)+`<section class="wrap block">${key === 'materials' ? materialCatalog(true) : list(key,catalogs[key],2)}</section>`+band('Обговорімо ваш запит','Підготуйте деталі або зателефонуйте, щоб уточнити умови.',topicBySection[key])},
     ...catalogs[key].map((item)=>({route:key+'/'+item.slug+'/',title:item.title,description:item.text,image:item.image,body:detail(key,item)})),
   ]),
   {route:'about/',title:'Про компанію',description:'Продаж сипучих матеріалів і холодного асфальту. Доставка та самовивіз.',body:pageTitle('Про компанію','«Столиця & Сервіс» продає будівельні матеріали в мішках і навалом.')+`<section class="wrap block editorial"><figure>${photo('yard','Майданчик завантаження матеріалів',true)}</figure><div><h2>Матеріали й отримання</h2><p>В асортименті — річковий пісок, щебінь, відсів, керамзит і холодний асфальт. Фракції та фасування, вказані на упаковках, наведено в каталозі.</p><p>Перед замовленням можна обговорити потрібний обсяг, доставку на об’єкт або самовивіз.</p>${button('materials/','Переглянути матеріали','line')}</div></section>`},

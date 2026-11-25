@@ -51,27 +51,51 @@ required('.skip', HTMLAnchorElement).addEventListener('click', (event) => {
   content.scrollIntoView();
 });
 
-if (document.querySelector('#search')) {
-  const search = required('#search', HTMLInputElement);
-  const group = required('#group', HTMLSelectElement);
-  const result = required('#results', HTMLElement);
-  const entries = [...document.querySelectorAll('article[data-group]')]
-    .filter((entry) => entry instanceof HTMLElement);
+for (const catalog of document.querySelectorAll('[data-catalog]')) {
+  const search = catalog.querySelector('input');
+  const entries = [...catalog.querySelectorAll('[data-group]')].filter((entry) => entry instanceof HTMLElement);
+  const buttons = [...catalog.querySelectorAll('button')];
+  const result = catalog.querySelector('[role="status"]');
 
   function filterMaterials() {
-    const query = search.value.trim().toLocaleLowerCase('uk');
+    const query = (search?.value || '').trim().toLocaleLowerCase('uk');
+    const category = buttons.find((button) => button.getAttribute('aria-pressed') === 'true')?.dataset.filter;
     for (const entry of entries) {
-      const text = entry.querySelector('.entry-text').textContent.toLocaleLowerCase('uk');
-      entry.hidden = !(text.includes(query) && (!group.value || group.value === entry.dataset.group));
+      const text = entry.textContent.toLocaleLowerCase('uk');
+      entry.hidden = !(text.includes(query) && (!category || entry.dataset.group === category));
     }
     const count = entries.filter((entry) => !entry.hidden).length;
-    result.textContent = count ? `Знайдено позицій: ${count}` : 'Нічого не знайдено. Спробуйте інший запит або категорію.';
+    result.textContent = count
+      ? `Знайдено позицій: ${count}`
+      : 'Нічого не знайдено. Спробуйте інший запит або категорію.';
+    result.classList.toggle('catalog-count', count > 0);
   }
 
-  search.addEventListener('input', filterMaterials);
-  group.addEventListener('change', filterMaterials);
-  required('.controls', HTMLElement).hidden = false;
-  filterMaterials();
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      buttons.forEach((option) => option.setAttribute('aria-pressed', String(option === button)));
+      filterMaterials();
+    });
+  }
+  search?.addEventListener('input', filterMaterials);
+  const controls = catalog.querySelector('.catalog-controls');
+  if (controls instanceof HTMLElement) controls.hidden = false;
+}
+
+if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      observer.unobserve(entry.target);
+      entry.target.classList.add('reveal-entered');
+      setTimeout(() => entry.target.classList.remove('reveal-entered'), 650);
+    }
+  }, {threshold: 0.12});
+
+  for (const element of document.querySelectorAll('[data-reveal]')) {
+    // The first screen and all content without JavaScript render immediately.
+    if (element.getBoundingClientRect().top >= innerHeight) observer.observe(element);
+  }
 }
 
 const form = document.querySelector('#inquiry-form');
